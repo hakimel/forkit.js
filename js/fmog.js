@@ -7,9 +7,7 @@
  */
 (function(){
 
-	var CANVAS_WIDTH = 170,
-		CANVAS_HEIGHT = 170,
-		TAG_HEIGHT = 30,
+	var TAG_HEIGHT = 30,
 		TAG_WIDTH = 200,
 		TAG_FONT_SIZE = 13,
 		TAG_TEXT  = 'Fork me on GitHub';
@@ -19,9 +17,9 @@
 		context,
 
 		world = {
-			width: 1,
-			height: 1,
-			gravity: 1
+			width: 400,
+			height: 400,
+			gravity: 2
 		},
 
 		handle = {
@@ -29,34 +27,33 @@
 			y: 0,
 			vx: 0,
 			vy: 0,
-			ox: -TAG_WIDTH * 0.58, 
-			oy: -TAG_HEIGHT * 0.3,
 			rotation: 45,
 			detached: false
 		},
 
 		spring = {
-			start: new Point( -TAG_WIDTH * 0.58, -TAG_HEIGHT * 0.3 ),
-			end: new Point( -TAG_WIDTH * 0.58, -TAG_HEIGHT * 0.3 )
+			start: new Point(),
+			end: new Point()
 		},
 
 		mouse = new Point();
 
 	function initialize() {
 
-		var container = document.querySelector( '.fmog' );
+		container = document.querySelector( '.fmog' );
 
 		if( container ) {
 			
 			canvas = document.createElement( 'canvas' );
 			context = canvas.getContext( '2d' );
-
-			resize();
-
-			container.style.width = world.width + 'px';
-			container.style.height = world.height + 'px';
 			container.appendChild( canvas );
 
+			container.style.position = 'absolute';
+			container.style['top'] = 0;
+			container.style['right'] = 0;
+			container.style['pointer-events'] = 'none';
+
+			resize();
 			animate();
 
 			document.addEventListener( 'mousemove', onMouseMove, false );
@@ -69,17 +66,11 @@
 	}
 
 	function resize() {
-		// if( handle.detached ) {
-			world.width = window.innerWidth;
-			world.height = window.innerHeight;
-		// }
-		// else {
-		// 	world.width = CANVAS_WIDTH;
-		// 	world.height = CANVAS_HEIGHT;
-		// }
-
 		canvas.width = world.width;
 		canvas.height = world.height;
+
+		container.style.width = world.width + 'px';
+		container.style.height = world.height + 'px';
 	}
 
 	function onMouseMove( event ) {
@@ -92,13 +83,13 @@
 	}
 
 	function onMouseUp( event ) {
-		
+		window.open( container.getAttribute( 'href' ), '_self' );
 	}
 
 	function animate() {
-
 		// TODO: Reduce size
-		context.clearRect( 0, 0, world.width, world.height );
+		// context.clearRect( 0, 0, world.width, world.height );
+		canvas.width = canvas.width;
 
 		update();
 		render();
@@ -107,7 +98,7 @@
 	}
 
 	function update() {
-		var distance = mouse.distanceTo( world.width, 0 );
+		var distance = mouse.distanceTo( window.innerWidth, 0 );
 
 		if( distance < TAG_WIDTH ) {
 			handle.detached = true;
@@ -117,38 +108,43 @@
 		}
 
 		if( handle.detached ) {
-			var tx = mouse.x - world.width,
-				ty = mouse.y;
-
-			handle.vy *= 0.96;
+			handle.vy *= 0.94;
 			handle.vy += world.gravity;
 
-			if(  )
+			spring.end.y += handle.vy;
 
-			handle.y += handle.vy;
+			var strain = spring.start.distanceTo( spring.end.x, spring.end.y );
 
-			// handle.x += ( tx - handle.x ) * 0.1;
-			// handle.y += ( ty - handle.y ) * 0.1;
+			if( strain > 40 ) {
+				handle.vy -= Math.abs( strain ) / 40;
+			}
 
-			handle.ox *= 0.9;
-			handle.oy += ( -TAG_WIDTH - handle.oy ) * 0.1;
-			handle.rotation += ( 90 - handle.rotation ) * 0.1;
+			var angleOffset = Math.atan2( mouse.y - spring.end.y, mouse.x - spring.end.x ) * 180 / Math.PI;
+
+			handle.rotation += ( ( 90 + angleOffset ) - handle.rotation ) * 0.1;
 		}
 		else {
-			handle.x *= 0.9;
-			handle.y *= 0.9;
+			spring.end.x *= 0.8;
+			spring.end.y *= 0.8;
 
-			handle.ox += ( ( -TAG_WIDTH * 0.58 ) - handle.ox ) * 0.1;
-			handle.oy += ( ( -TAG_HEIGHT * 0.3 ) - handle.oy ) * 0.1;
 			handle.rotation += ( 45 - handle.rotation ) * 0.1;
 		}
 	}
 
 	function render() {
 		context.save();
-		context.translate( world.width, -TAG_HEIGHT / 2 );
-		context.translate( handle.ox, handle.oy );
-		context.translate( handle.x, handle.y );
+		context.translate( world.width - ( TAG_WIDTH * 0.58 ), -TAG_HEIGHT * 0.75 );
+		context.translate( spring.end.x, spring.end.y );
+
+		context.save();
+		context.translate( -TAG_HEIGHT / 2, 0 );
+		context.moveTo( spring.end.x, -spring.end.y );
+		context.lineTo( 0, 0 );
+		context.lineWidth = 2;
+		context.strokeStyle = '#fff';
+		context.stroke();
+		context.restore();
+
 		context.rotate( handle.rotation / 180 * Math.PI );
 
 		context.fillStyle = '#aa0000';

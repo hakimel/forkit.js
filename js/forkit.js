@@ -2,6 +2,8 @@
  * forkit.js 0.1
  * http://lab.hakim.se/forkit-js
  * MIT licensed
+ *
+ * The state of the code is crude at best, will clean it up soon.
  * 
  * Created by Hakim El Hattab, http://hakim.se
  */

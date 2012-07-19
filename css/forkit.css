@@ -8,83 +8,14 @@
 	        box-sizing: border-box;
 }
 
-body {
-	background: #323232;
-	font-family: 'Lato', Times, 'Times New Roman', serif;
-	font-size: 16px;
-	color: #eee;
-	margin-bottom: 40px;
-}
-
-header {
-	background: rgba(0, 0, 0, 0.2);
-	margin-bottom: 30px;
-	padding: 20px 100px 20px 20px;
-	font-size: 20px;
-	line-height: 1.3em;
-}
-
-header div {
-	margin-top: 10px;
-}
-
-a {
-	color: cyan;
-}
-
-article {
-	display: inline-block;
-	margin: 20px;
-}
-
-h2 {
-	font-size: 16px;
-	margin-bottom: 20px;
-	text-transform: uppercase;
-}
-
-small {
-	opacity: 0.6;
-	font-style: italic;
-	font-size: 14px;
-	margin-left: 5px;
-}
-
-
-/**
- * List used for the demo page
- */
-ul {
-	position: relative;
-	width: 230px;
-	height: 480px;
-	margin: 0;
-	padding: 0;
-	overflow-x: hidden;
-	overflow-y: scroll;
-	list-style: none;
-}
-	ul li {
-		position: relative;
-		padding: 16px;
-		background: #eee;
-		color: #252525;
-		font-size: 18px;
-		z-index: 2;
-	}
-	ul li:nth-child(odd) {
-		background: #fff;
-	}
-
-
-.fmog {
+.forkit {
 	position: absolute;
 	right: 0;
 	top: 0;
 
 	text-decoration: none;
 }
-	.fmog .tag {
+	.forkit .tag {
 		display: block;
 		height: 30px;
 		width: 200px;
@@ -103,7 +34,7 @@ ul {
 		     -o-transform-origin: 15px 0px;
 		        transform-origin: 15px 0px;
 	}
-	.fmog .tag:after {
+	.forkit .tag:after {
 		content: '';
 		display: block;
 		position: absolute;
@@ -114,7 +45,7 @@ ul {
 		margin: 1px;
 		border: 1px solid rgba( 255, 255, 255, 0.4 );
 	}
-	.fmog .string {
+	.forkit .string {
 		display: block;
 		height: 1px;
 		width: 0px;

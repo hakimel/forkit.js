@@ -1,6 +1,6 @@
 /*!
- * fmog.js 0.1
- * http://lab.hakim.se/fmog
+ * forkit.js 0.1
+ * http://lab.hakim.se/forkit-js
  * MIT licensed
  * 
  * Created by Hakim El Hattab, http://hakim.se
@@ -9,6 +9,9 @@
 
 	var TAG_HEIGHT = 30,
 		TAG_WIDTH = 200,
+
+		INACTIVE_TEXT = 'Fork me on GitHub',
+		ACTIVE_TEXT = 'Drag down >',
 
 		VENDORS = [ 'Webkit', 'Moz', 'O', 'ms' ];
 
@@ -46,12 +49,12 @@
 
 	function initialize() {
 
-		containerElement = document.querySelector( '.fmog' );
+		containerElement = document.querySelector( '.forkit' );
 
 		if( containerElement ) {
 
 			containerElement.innerHTML = '<span class="string"></span>'
-										+ '<span class="tag">Fork me on GitHub</span>';
+										+ '<span class="tag">' + INACTIVE_TEXT + '</span>';
 
 			stringElement = containerElement.querySelector( '.string' );
 			tagElement = containerElement.querySelector( '.tag' );
@@ -91,9 +94,11 @@
 
 		if( distance < TAG_WIDTH ) {
 			detached = true;
+			tagElement.innerHTML = ACTIVE_TEXT;
 		}
 		else if( !mouse.down && distance > TAG_WIDTH * 2 ) {
 			detached = false;
+			tagElement.innerHTML = INACTIVE_TEXT;
 		}
 
 		if( detached ) {

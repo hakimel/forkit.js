@@ -3,65 +3,51 @@ body {
 	font-family: 'Lato', Times, 'Times New Roman', serif;
 	font-size: 16px;
 	color: #eee;
-	margin-bottom: 40px;
-}
-
-header {
-	background: rgba(0, 0, 0, 0.2);
-	margin-bottom: 30px;
-	padding: 20px 100px 20px 20px;
-	font-size: 20px;
-	line-height: 1.3em;
-}
-
-header div {
-	margin-top: 10px;
+	overflow: hidden;
 }
 
 a {
-	color: cyan;
+	color: #74e685;
+	text-decoration: none;
+
+	-webkit-transition: 0.15s color ease;
+	   -moz-transition: 0.15s color ease;
+	    -ms-transition: 0.15s color ease;
+	     -o-transition: 0.15s color ease;
+	        transition: 0.15s color ease;
 }
+	a:hover {
+		color: #d3f3d7;
+	}
 
 article {
 	display: inline-block;
 	margin: 20px;
+	width: 480px;
+}
+
+h1, h2 {
+	font-size: 24px;
+	display: inline-block;
 }
 
 h2 {
-	font-size: 16px;
-	margin-bottom: 20px;
-	text-transform: uppercase;
+	color: #ccc;
+}
+
+p {
+	margin: 10px 0 10px 0;
+	font-size: 15px;
 }
 
 small {
-	opacity: 0.6;
-	font-style: italic;
-	font-size: 14px;
-	margin-left: 5px;
+	display: block;
+	margin: 10px 0 20px 0;
+	color: #bbb;
 }
 
-
-/**
- * List used for the demo page
- */
-ul {
-	position: relative;
-	width: 230px;
-	height: 480px;
-	margin: 0;
-	padding: 0;
-	overflow-x: hidden;
-	overflow-y: scroll;
-	list-style: none;
+.sharing {
+	position: absolute;
+	bottom: 16px;
+	left: 20px;
 }
-	ul li {
-		position: relative;
-		padding: 16px;
-		background: #eee;
-		color: #252525;
-		font-size: 18px;
-		z-index: 2;
-	}
-	ul li:nth-child(odd) {
-		background: #fff;
-	}

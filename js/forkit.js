@@ -11,7 +11,7 @@
 		TAG_WIDTH = 200,
 
 		INACTIVE_TEXT = 'Fork me on GitHub',
-		ACTIVE_TEXT = 'Drag down >',
+		ACTIVE_TEXT = 'Fork me on GitHub',
 
 		VENDORS = [ 'Webkit', 'Moz', 'O', 'ms' ];
 
@@ -19,11 +19,9 @@
 		stringElement,
 		tagElement,
 
-		world = {
-			width: 400,
-			height: 400,
-			gravity: 2
-		},
+		repoElement,
+
+		gravity = 2,
 
 		originalX = TAG_WIDTH * 0.4,
 		originalY = -TAG_HEIGHT * 0.5,
@@ -92,7 +90,7 @@
 	function update() {
 		var distance = distanceBetween( mouse.x, mouse.y, window.innerWidth, 0 );
 
-		if( distance < TAG_WIDTH ) {
+		if( distance < TAG_WIDTH * 1.5 ) {
 			detached = true;
 			tagElement.innerHTML = ACTIVE_TEXT;
 		}
@@ -105,7 +103,7 @@
 			var containerOffsetX = containerElement.offsetLeft;
 
 			velocityY *= 0.94;
-			velocityY += world.gravity;
+			velocityY += gravity;
 
 			anchorB.y += velocityY;
 
@@ -128,10 +126,10 @@
 			rotation += ( angle - rotation ) * 0.1;
 		}
 		else {
-			anchorB.x += ( anchorA.x - anchorB.x ) * 0.3;
-			anchorB.y += ( anchorA.y - anchorB.y ) * 0.3;
+			anchorB.x += ( anchorA.x - anchorB.x ) * 0.2;
+			anchorB.y += ( anchorA.y - anchorB.y ) * 0.2;
 
-			rotation += ( 45 - rotation ) * 0.1;
+			rotation += ( 45 - rotation ) * 0.2;
 		}
 	}
 

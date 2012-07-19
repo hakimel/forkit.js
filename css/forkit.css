@@ -13,6 +13,10 @@
 	right: 0;
 	top: 0;
 
+	width: 200px;
+	height: 150px;
+
+	font-family: 'Lato', sans-serif;
 	text-decoration: none;
 }
 	.forkit .tag {

@@ -9,12 +9,12 @@
 
 	var TAG_HEIGHT = 30,
 		TAG_WIDTH = 200,
-		TAG_FONT_SIZE = 13,
-		TAG_TEXT  = 'Fork me on GitHub';
 
-	var container,
-		canvas,
-		context,
+		VENDORS = [ 'Webkit', 'Moz', 'O', 'ms' ];
+
+	var containerElement,
+		stringElement,
+		tagElement,
 
 		world = {
 			width: 400,
@@ -22,55 +22,48 @@
 			gravity: 2
 		},
 
-		handle = {
-			x: 0,
-			y: 0,
-			vx: 0,
-			vy: 0,
-			rotation: 45,
-			detached: false
+		originalX = TAG_WIDTH * 0.4,
+		originalY = -TAG_HEIGHT * 0.5,
+
+		velocityX = 0,
+		velocityY = 0,
+		rotation = 45,
+
+		detached = false,
+		dragging = false,
+
+		anchorA = {
+			x: originalX,
+			y: originalY
 		},
 
-		spring = {
-			start: new Point(),
-			end: new Point()
+		anchorB = {
+			x: originalX,
+			y: originalY
 		},
 
 		mouse = new Point();
 
 	function initialize() {
 
-		container = document.querySelector( '.fmog' );
+		containerElement = document.querySelector( '.fmog' );
 
-		if( container ) {
-			
-			canvas = document.createElement( 'canvas' );
-			context = canvas.getContext( '2d' );
-			container.appendChild( canvas );
+		if( containerElement ) {
 
-			container.style.position = 'absolute';
-			container.style['top'] = 0;
-			container.style['right'] = 0;
-			container.style['pointer-events'] = 'none';
+			containerElement.innerHTML = '<span class="string"></span>'
+										+ '<span class="tag">Fork me on GitHub</span>';
 
-			resize();
+			stringElement = containerElement.querySelector( '.string' );
+			tagElement = containerElement.querySelector( '.tag' );
+
 			animate();
 
 			document.addEventListener( 'mousemove', onMouseMove, false );
 			document.addEventListener( 'mousedown', onMouseDown, false );
 			document.addEventListener( 'mouseup', onMouseUp, false );
-			window.addEventListener( 'resize', resize, false );
 
 		}
 
-	}
-
-	function resize() {
-		canvas.width = world.width;
-		canvas.height = world.height;
-
-		container.style.width = world.width + 'px';
-		container.style.height = world.height + 'px';
 	}
 
 	function onMouseMove( event ) {
@@ -83,14 +76,10 @@
 	}
 
 	function onMouseUp( event ) {
-		window.open( container.getAttribute( 'href' ), '_self' );
+		
 	}
 
 	function animate() {
-		// TODO: Reduce size
-		// context.clearRect( 0, 0, world.width, world.height );
-		canvas.width = canvas.width;
-
 		update();
 		render();
 
@@ -98,69 +87,85 @@
 	}
 
 	function update() {
-		var distance = mouse.distanceTo( window.innerWidth, 0 );
+		var distance = distanceBetween( mouse.x, mouse.y, window.innerWidth, 0 );
 
 		if( distance < TAG_WIDTH ) {
-			handle.detached = true;
+			detached = true;
 		}
 		else if( !mouse.down && distance > TAG_WIDTH * 2 ) {
-			handle.detached = false;
+			detached = false;
 		}
 
-		if( handle.detached ) {
-			handle.vy *= 0.94;
-			handle.vy += world.gravity;
+		if( detached ) {
+			var containerOffsetX = containerElement.offsetLeft;
 
-			spring.end.y += handle.vy;
+			velocityY *= 0.94;
+			velocityY += world.gravity;
 
-			var strain = spring.start.distanceTo( spring.end.x, spring.end.y );
+			anchorB.y += velocityY;
+
+			var offsetX = ( ( mouse.x - containerOffsetX ) - originalX ) * 0.2;
+			
+			anchorB.x += ( ( originalX + offsetX ) - anchorB.x ) * 0.1;
+
+			var strain = distanceBetween( anchorA.x, anchorA.y, anchorB.x, anchorB.y );
 
 			if( strain > 40 ) {
-				handle.vy -= Math.abs( strain ) / 40;
+				velocityY -= Math.abs( strain ) / 40;
 			}
 
-			var angleOffset = Math.atan2( mouse.y - spring.end.y, mouse.x - spring.end.x ) * 180 / Math.PI;
+			var dy = Math.max( mouse.y - anchorB.y, 0 ),
+				dx = mouse.x - ( containerOffsetX + anchorB.x );
 
-			handle.rotation += ( ( 90 + angleOffset ) - handle.rotation ) * 0.1;
+			var angle = Math.atan2( dy, dx ) * 180 / Math.PI;
+			angle = Math.min( 130, Math.max( 50, angle ) );
+
+			rotation += ( angle - rotation ) * 0.1;
 		}
 		else {
-			spring.end.x *= 0.8;
-			spring.end.y *= 0.8;
+			anchorB.x += ( anchorA.x - anchorB.x ) * 0.3;
+			anchorB.y += ( anchorA.y - anchorB.y ) * 0.3;
 
-			handle.rotation += ( 45 - handle.rotation ) * 0.1;
+			rotation += ( 45 - rotation ) * 0.1;
 		}
 	}
 
 	function render() {
-		context.save();
-		context.translate( world.width - ( TAG_WIDTH * 0.58 ), -TAG_HEIGHT * 0.75 );
-		context.translate( spring.end.x, spring.end.y );
+		
+		tagElement.style[ prefix( 'transform' ) ] = transform( anchorB.x, anchorB.y, rotation );
 
-		context.save();
-		context.translate( -TAG_HEIGHT / 2, 0 );
-		context.moveTo( spring.end.x, -spring.end.y );
-		context.lineTo( 0, 0 );
-		context.lineWidth = 2;
-		context.strokeStyle = '#fff';
-		context.stroke();
-		context.restore();
+		var dy = anchorB.y - anchorA.y,
+			dx = anchorB.x - anchorA.x;
 
-		context.rotate( handle.rotation / 180 * Math.PI );
+		var angle = Math.atan2( dy, dx ) * 180 / Math.PI;
 
-		context.fillStyle = '#aa0000';
-		context.fillRect( 0, 0, TAG_WIDTH, TAG_HEIGHT );
+		stringElement.style.width = anchorB.y + 'px';
+		stringElement.style[ prefix( 'transform' ) ] = transform( anchorA.x, 0, angle );
 
-		context.strokeStyle = 'rgba( 255, 255, 255, 0.3 )';
-		context.strokeRect( 1.5, 1.5, TAG_WIDTH-3, TAG_HEIGHT-3 );
-		context.strokeStyle = '';
+	}
 
-		context.shadowBlur = 4;
-		context.shadowColor = 'rgba( 0, 0, 0, 0.4 )';
-		context.font = 'bold ' + TAG_FONT_SIZE + 'px Arial';
-		context.fillStyle = '#ffffff';
-		context.fillText( TAG_TEXT, ( TAG_WIDTH - context.measureText( TAG_TEXT ).width ) / 2, ( TAG_HEIGHT / 2 ) + 4 );
+	function prefix( property, el ) {
+		var propertyUC = property.slice( 0, 1 ).toUpperCase() + property.slice( 1 );
 
-		context.restore();
+		for( var i = 0, len = VENDORS.length; i < len; i++ ) {
+			var vendor = VENDORS[i];
+
+			if( typeof ( el || document.body ).style[ vendor + propertyUC ] !== 'undefined' ) {
+				return vendor + propertyUC;
+			}
+		}
+
+		return property;
+	}
+
+	function transform( x, y, r ) {
+		return 'translate('+x+'px,'+y+'px) rotate('+r+'deg)';
+	}
+
+	function distanceBetween( x1, y1, x2, y2 ) {
+		var dx = x1-x2;
+		var dy = y1-y2;
+		return Math.sqrt(dx*dx + dy*dy);
 	}
 
 	window.requestAnimFrame = (function(){

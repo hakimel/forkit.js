@@ -12,16 +12,15 @@
 	var TAG_HEIGHT = 30,
 		TAG_WIDTH = 200,
 
-		INACTIVE_TEXT = 'Fork me on GitHub',
-		ACTIVE_TEXT = 'Fork me on GitHub',
-
 		VENDORS = [ 'Webkit', 'Moz', 'O', 'ms' ];
 
-	var containerElement,
+	var ribbonElement,
 		stringElement,
 		tagElement,
+		targetElement,
 
-		repoElement,
+		activeText = '',
+		inactiveText = '',
 
 		gravity = 2,
 
@@ -35,29 +34,26 @@
 		detached = false,
 		dragging = false,
 
-		anchorA = {
-			x: originalX,
-			y: originalY
-		},
-
-		anchorB = {
-			x: originalX,
-			y: originalY
-		},
+		anchorA = new Point( originalX, originalY ),
+		anchorB = new Point( originalX, originalY ),
 
 		mouse = new Point();
 
 	function initialize() {
 
-		containerElement = document.querySelector( '.forkit' );
+		ribbonElement = document.querySelector( '.forkit' );
+		targetElement = document.querySelector( '.forkit-target' );
 
-		if( containerElement ) {
+		if( ribbonElement ) {
 
-			containerElement.innerHTML = '<span class="string"></span>'
-										+ '<span class="tag">' + INACTIVE_TEXT + '</span>';
+			activeText = ribbonElement.getAttribute( 'data-text-active' ) || '';
+			inactiveText = ribbonElement.getAttribute( 'data-text' ) || '';
 
-			stringElement = containerElement.querySelector( '.string' );
-			tagElement = containerElement.querySelector( '.tag' );
+			ribbonElement.innerHTML = '<span class="string"></span>'
+										+ '<span class="tag">' + inactiveText + '</span>';
+
+			stringElement = ribbonElement.querySelector( '.string' );
+			tagElement = ribbonElement.querySelector( '.tag' );
 
 			animate();
 
@@ -94,15 +90,15 @@
 
 		if( distance < TAG_WIDTH * 1.5 ) {
 			detached = true;
-			tagElement.innerHTML = ACTIVE_TEXT;
+			tagElement.innerHTML = activeText;
 		}
 		else if( !mouse.down && distance > TAG_WIDTH * 2 ) {
 			detached = false;
-			tagElement.innerHTML = INACTIVE_TEXT;
+			tagElement.innerHTML = inactiveText;
 		}
 
 		if( detached ) {
-			var containerOffsetX = containerElement.offsetLeft;
+			var containerOffsetX = ribbonElement.offsetLeft;
 
 			velocityY *= 0.94;
 			velocityY += gravity;
@@ -173,17 +169,6 @@
 		return Math.sqrt(dx*dx + dy*dy);
 	}
 
-	window.requestAnimFrame = (function(){
-		return  window.requestAnimationFrame 		||
-				window.webkitRequestAnimationFrame	||
-				window.mozRequestAnimationFrame		||
-				window.oRequestAnimationFrame		||
-				window.msRequestAnimationFrame		||
-				function( callback ){
-					window.setTimeout(callback, 1000 / 60);
-				};
-	})();
-
 	/**
 	 * Defines a 2D position.
 	 */
@@ -206,6 +191,17 @@
 		this.x += ( x - this.x ) * amp;
 		this.y += ( y - this.y ) * amp;
 	};
+
+	window.requestAnimFrame = (function(){
+		return  window.requestAnimationFrame 		||
+				window.webkitRequestAnimationFrame	||
+				window.mozRequestAnimationFrame		||
+				window.oRequestAnimationFrame		||
+				window.msRequestAnimationFrame		||
+				function( callback ){
+					window.setTimeout(callback, 1000 / 60);
+				};
+	})();
 
 	initialize();
 

@@ -9,9 +9,13 @@
  */
 (function(){
 
-	var TAG_HEIGHT = 30,
+	var STATE_CLOSED = 0,
+		STATE_DETACHED = 1,
+		STATE_OPENED = 2,
+
+		TAG_HEIGHT = 30,
 		TAG_WIDTH = 200,
-		DRAG_THRESHOLD = 0.1;
+		DRAG_THRESHOLD = 0.3;
 
 		VENDORS = [ 'Webkit', 'Moz', 'O', 'ms' ];
 
@@ -19,6 +23,8 @@
 		stringElement,
 		tagElement,
 		targetElement,
+
+		state = STATE_CLOSED,
 
 		activeText = '',
 		inactiveText = '',
@@ -37,9 +43,7 @@
 
 		targetY = 0,
 
-		detached = false,
 		dragging = false,
-		released = false,
 
 		anchorA = new Point( originalX, originalY ),
 		anchorB = new Point( originalX, originalY ),
@@ -71,14 +75,10 @@
 			document.addEventListener( 'mousemove', onMouseMove, false );
 			document.addEventListener( 'mousedown', onMouseDown, false );
 			document.addEventListener( 'mouseup', onMouseUp, false );
+			window.addEventListener( 'resize', layout, false );
 
 		}
 
-	}
-
-	function onMouseMove( event ) {
-		mouse.x = event.clientX;
-		mouse.y = event.clientY;
 	}
 
 	function onMouseDown( event ) {
@@ -92,13 +92,29 @@
 		}
 	}
 
+	function onMouseMove( event ) {
+		mouse.x = event.clientX;
+		mouse.y = event.clientY;
+	}
+
 	function onMouseUp( event ) {
-		dragging = false;
+		if( state !== STATE_OPENED ) {
+			state = STATE_CLOSED;
+			dragging = false;
+		}
 	}
 
 	function onRibbonClick( event ) {
 		if( targetElement ) {
 			event.preventDefault();
+
+			state = STATE_OPENED;
+		}
+	}
+
+	function layout() {
+		if( state === STATE_OPENED ) {
+			targetY = window.innerHeight;
 		}
 	}
 
@@ -114,23 +130,31 @@
 
 		// Detach the tag when we're close enough
 		if( distance < TAG_WIDTH * 1.5 ) {
-			detached = true;
+			state = STATE_DETACHED;
 			tagElement.innerHTML = activeText;
 		}
 		// Re-attach the tag if the user mouse away
-		else if( !dragging && distance > TAG_WIDTH * 2 ) {
-			detached = false;
+		else if( dragging && state === STATE_DETACHED && distance > TAG_WIDTH * 2 ) {
+			state = STATE_CLOSED;
 			tagElement.innerHTML = inactiveText;
 		}
 
 		if( dragging ) {
 			targetY = Math.max( mouse.y - dragY, 0 );
+
+			if( targetY > window.innerHeight * DRAG_THRESHOLD ) {
+				dragging = false;
+				state = STATE_OPENED;
+			}
 		}
-		else if( !released ) {
+		else if( state === STATE_OPENED ) {
+			targetY = Math.min( targetY + ( window.innerHeight - targetY ) * 0.2, window.innerHeight );
+		}
+		else {
 			targetY *= 0.8;
 		}
 
-		if( detached ) {
+		if( dragging || state === STATE_DETACHED ) {
 			var containerOffsetX = ribbonElement.offsetLeft;
 
 			velocityY *= 0.94;

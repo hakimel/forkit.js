@@ -11,6 +11,7 @@
 
 	var TAG_HEIGHT = 30,
 		TAG_WIDTH = 200,
+		DRAG_THRESHOLD = 0.1;
 
 		VENDORS = [ 'Webkit', 'Moz', 'O', 'ms' ];
 
@@ -31,8 +32,14 @@
 		velocityY = 0,
 		rotation = 45,
 
+		dragX = 0,
+		dragY = 0,
+
+		targetY = 0,
+
 		detached = false,
 		dragging = false,
+		released = false,
 
 		anchorA = new Point( originalX, originalY ),
 		anchorB = new Point( originalX, originalY ),
@@ -46,9 +53,12 @@
 
 		if( ribbonElement ) {
 
+			// Fetch label texts from DOM
 			activeText = ribbonElement.getAttribute( 'data-text-active' ) || '';
 			inactiveText = ribbonElement.getAttribute( 'data-text' ) || '';
 
+			// Construct the sub-elements required to represent the 
+			// tag and string that it hangs from
 			ribbonElement.innerHTML = '<span class="string"></span>'
 										+ '<span class="tag">' + inactiveText + '</span>';
 
@@ -57,6 +67,7 @@
 
 			animate();
 
+			ribbonElement.addEventListener( 'click', onRibbonClick, false );
 			document.addEventListener( 'mousemove', onMouseMove, false );
 			document.addEventListener( 'mousedown', onMouseDown, false );
 			document.addEventListener( 'mouseup', onMouseUp, false );
@@ -71,11 +82,24 @@
 	}
 
 	function onMouseDown( event ) {
-		
+		if( targetElement ) {
+			event.preventDefault();
+
+			dragging = true;
+
+			dragX = event.clientX;
+			dragY = event.clientY;
+		}
 	}
 
 	function onMouseUp( event ) {
-		
+		dragging = false;
+	}
+
+	function onRibbonClick( event ) {
+		if( targetElement ) {
+			event.preventDefault();
+		}
 	}
 
 	function animate() {
@@ -88,13 +112,22 @@
 	function update() {
 		var distance = distanceBetween( mouse.x, mouse.y, window.innerWidth, 0 );
 
+		// Detach the tag when we're close enough
 		if( distance < TAG_WIDTH * 1.5 ) {
 			detached = true;
 			tagElement.innerHTML = activeText;
 		}
-		else if( !mouse.down && distance > TAG_WIDTH * 2 ) {
+		// Re-attach the tag if the user mouse away
+		else if( !dragging && distance > TAG_WIDTH * 2 ) {
 			detached = false;
 			tagElement.innerHTML = inactiveText;
+		}
+
+		if( dragging ) {
+			targetY = Math.max( mouse.y - dragY, 0 );
+		}
+		else if( !released ) {
+			targetY *= 0.8;
 		}
 
 		if( detached ) {
@@ -103,11 +136,10 @@
 			velocityY *= 0.94;
 			velocityY += gravity;
 
-			anchorB.y += velocityY;
-
 			var offsetX = ( ( mouse.x - containerOffsetX ) - originalX ) * 0.2;
 			
 			anchorB.x += ( ( originalX + offsetX ) - anchorB.x ) * 0.1;
+			anchorB.y += velocityY;
 
 			var strain = distanceBetween( anchorA.x, anchorA.y, anchorB.x, anchorB.y );
 
@@ -132,6 +164,9 @@
 	}
 
 	function render() {
+
+		targetElement.style.top = - 100 + Math.min( ( targetY / window.innerHeight ) * 100, 100 ) + '%';
+		ribbonElement.style[ prefix( 'transform' ) ] = transform( 0, targetY, 0 );
 		
 		tagElement.style[ prefix( 'transform' ) ] = transform( anchorB.x, anchorB.y, rotation );
 

@@ -31,8 +31,8 @@
 
 		gravity = 2,
 
-		originalX = TAG_WIDTH * 0.4,
-		originalY = -TAG_HEIGHT * 0.5,
+		openedX = TAG_WIDTH * 0.4,
+		openedY = -TAG_HEIGHT * 0.5,
 
 		velocityX = 0,
 		velocityY = 0,
@@ -45,8 +45,8 @@
 
 		dragging = false,
 
-		anchorA = new Point( originalX, originalY ),
-		anchorB = new Point( originalX, originalY ),
+		anchorA = new Point( openedX, openedY ),
+		anchorB = new Point( openedX, openedY ),
 
 		mouse = new Point();
 
@@ -128,30 +128,34 @@
 	function update() {
 		var distance = distanceBetween( mouse.x, mouse.y, window.innerWidth, 0 );
 
-		// Detach the tag when we're close enough
-		if( distance < TAG_WIDTH * 1.5 ) {
-			state = STATE_DETACHED;
-			tagElement.innerHTML = activeText;
-		}
-		// Re-attach the tag if the user mouse away
-		else if( dragging && state === STATE_DETACHED && distance > TAG_WIDTH * 2 ) {
-			state = STATE_CLOSED;
-			tagElement.innerHTML = inactiveText;
-		}
-
-		if( dragging ) {
-			targetY = Math.max( mouse.y - dragY, 0 );
-
-			if( targetY > window.innerHeight * DRAG_THRESHOLD ) {
-				dragging = false;
-				state = STATE_OPENED;
-			}
-		}
-		else if( state === STATE_OPENED ) {
+		if( state === STATE_OPENED ) {
 			targetY = Math.min( targetY + ( window.innerHeight - targetY ) * 0.2, window.innerHeight );
 		}
 		else {
-			targetY *= 0.8;
+
+			// Detach the tag when we're close enough
+			if( distance < TAG_WIDTH * 1.5 ) {
+				state = STATE_DETACHED;
+				tagElement.innerHTML = activeText;
+			}
+			// Re-attach the tag if the user mouse away
+			else if( dragging && state === STATE_DETACHED && distance > TAG_WIDTH * 2 ) {
+				state = STATE_CLOSED;
+				tagElement.innerHTML = inactiveText;
+			}
+
+			if( dragging ) {
+				targetY = Math.max( mouse.y - dragY, 0 );
+
+				if( targetY > window.innerHeight * DRAG_THRESHOLD ) {
+					dragging = false;
+					state = STATE_OPENED;
+				}
+			}
+			else {
+				targetY *= 0.8;
+			}
+
 		}
 
 		if( dragging || state === STATE_DETACHED ) {
@@ -160,9 +164,9 @@
 			velocityY *= 0.94;
 			velocityY += gravity;
 
-			var offsetX = ( ( mouse.x - containerOffsetX ) - originalX ) * 0.2;
+			var offsetX = ( ( mouse.x - containerOffsetX ) - openedX ) * 0.2;
 			
-			anchorB.x += ( ( originalX + offsetX ) - anchorB.x ) * 0.1;
+			anchorB.x += ( ( openedX + offsetX ) - anchorB.x ) * 0.1;
 			anchorB.y += velocityY;
 
 			var strain = distanceBetween( anchorA.x, anchorA.y, anchorB.x, anchorB.y );
@@ -178,6 +182,12 @@
 			angle = Math.min( 130, Math.max( 50, angle ) );
 
 			rotation += ( angle - rotation ) * 0.1;
+		}
+		else if( state === STATE_OPENED ) {
+			anchorB.x += ( anchorA.x - anchorB.x ) * 0.2;
+			anchorB.y += ( (TAG_HEIGHT*2) - anchorB.y ) * 0.2;
+
+			rotation += ( 90 - rotation ) * 0.2;
 		}
 		else {
 			anchorB.x += ( anchorA.x - anchorB.x ) * 0.2;

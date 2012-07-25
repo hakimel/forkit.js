@@ -35,7 +35,6 @@
 		// Ribbon text, correlates to states
 		closedText = '',
 		detachedText = '',
-		openedText = '',
 
 		gravity = 2,
 
@@ -73,7 +72,6 @@
 			// Fetch label texts from DOM
 			closedText = dom.ribbon.getAttribute( 'data-text' ) || '';
 			detachedText = dom.ribbon.getAttribute( 'data-text-active' ) || 'Drag down >';
-			openedText = dom.ribbon.getAttribute( 'data-text-opened' ) || 'Close';
 
 			// Construct the sub-elements required to represent the 
 			// tag and string that it hangs from
@@ -150,7 +148,6 @@
 	function open() {
 		dragging = false;
 		state = STATE_OPENED;
-		dom.ribbonTag.innerHTML = openedText;
 	}
 
 	function close() {

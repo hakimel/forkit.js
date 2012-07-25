@@ -46,6 +46,10 @@ small {
 	color: #bbb;
 }
 
+del {
+	opacity: 0.3;
+}
+
 .sharing {
 	position: absolute;
 	bottom: 16px;

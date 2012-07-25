@@ -30,13 +30,14 @@
 			closeButton: null
 		},
 
+		// The current state of the ribbon
 		state = STATE_CLOSED,
 
 		// Ribbon text, correlates to states
 		closedText = '',
 		detachedText = '',
 
-		gravity = 2,
+		gravity = 1.5,
 
 		closedX = TAG_WIDTH * 0.4,
 		closedY = -TAG_HEIGHT * 0.5,
@@ -201,7 +202,7 @@
 		if( dragging || state === STATE_DETACHED ) {
 			var containerOffsetX = dom.ribbon.offsetLeft;
 
-			velocityY *= 0.94;
+			velocityY *= 0.96;
 			velocityY += gravity;
 
 			var offsetX = ( ( mouse.x - containerOffsetX ) - closedX ) * 0.2;
@@ -212,7 +213,7 @@
 			var strain = distanceBetween( anchorA.x, anchorA.y, anchorB.x, anchorB.y );
 
 			if( strain > 40 ) {
-				velocityY -= Math.abs( strain ) / 40;
+				velocityY -= Math.abs( strain ) / 50;
 			}
 
 			var dy = Math.max( mouse.y - anchorB.y, 0 ),

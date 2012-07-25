@@ -1,5 +1,5 @@
 /*!
- * forkit.js 0.1
+ * forkit.js 0.2
  * http://lab.hakim.se/forkit-js
  * MIT licensed
  *
@@ -15,24 +15,31 @@
 
 		TAG_HEIGHT = 30,
 		TAG_WIDTH = 200,
-		DRAG_THRESHOLD = 0.3;
+
+		// Factor of page height that needs to be dragged for the 
+		// curtain to fall
+		DRAG_THRESHOLD = 0.36;
 
 		VENDORS = [ 'Webkit', 'Moz', 'O', 'ms' ];
 
 	var ribbonElement,
 		stringElement,
 		tagElement,
-		targetElement,
+		curtainElement,
 
 		state = STATE_CLOSED,
 
-		activeText = '',
-		inactiveText = '',
+		// Ribbon text, correlates to states
+		closedText = '',
+		detachedText = '',
+		openedText = '',
 
 		gravity = 2,
 
-		openedX = TAG_WIDTH * 0.4,
-		openedY = -TAG_HEIGHT * 0.5,
+		closedX = TAG_WIDTH * 0.4,
+		closedY = -TAG_HEIGHT * 0.5,
+		openedX = 0,
+		openedY = -TAG_HEIGHT,
 
 		velocityX = 0,
 		velocityY = 0,
@@ -42,29 +49,32 @@
 		dragY = 0,
 
 		targetY = 0,
+		currentY = 0,
 
 		dragging = false,
+		dragTime = 0,
 
-		anchorA = new Point( openedX, openedY ),
-		anchorB = new Point( openedX, openedY ),
+		anchorA = new Point( closedX, closedY ),
+		anchorB = new Point( closedX, closedY ),
 
 		mouse = new Point();
 
 	function initialize() {
 
 		ribbonElement = document.querySelector( '.forkit' );
-		targetElement = document.querySelector( '.forkit-target' );
+		curtainElement = document.querySelector( '.forkit-curtain' );
 
 		if( ribbonElement ) {
 
 			// Fetch label texts from DOM
-			activeText = ribbonElement.getAttribute( 'data-text-active' ) || '';
-			inactiveText = ribbonElement.getAttribute( 'data-text' ) || '';
+			closedText = ribbonElement.getAttribute( 'data-text' ) || '';
+			detachedText = ribbonElement.getAttribute( 'data-text-active' ) || 'Drag down >';
+			openedText = ribbonElement.getAttribute( 'data-text-opened' ) || 'Close';
 
 			// Construct the sub-elements required to represent the 
 			// tag and string that it hangs from
 			ribbonElement.innerHTML = '<span class="string"></span>'
-										+ '<span class="tag">' + inactiveText + '</span>';
+										+ '<span class="tag">' + closedText + '</span>';
 
 			stringElement = ribbonElement.querySelector( '.string' );
 			tagElement = ribbonElement.querySelector( '.tag' );
@@ -82,9 +92,10 @@
 	}
 
 	function onMouseDown( event ) {
-		if( targetElement ) {
+		if( curtainElement && state === STATE_DETACHED ) {
 			event.preventDefault();
 
+			dragTime = Date.now();
 			dragging = true;
 
 			dragX = event.clientX;
@@ -105,10 +116,15 @@
 	}
 
 	function onRibbonClick( event ) {
-		if( targetElement ) {
+		if( curtainElement ) {
 			event.preventDefault();
 
-			state = STATE_OPENED;
+			if( state === STATE_OPENED ) {
+				close();
+			}
+			else if( Date.now() - dragTime < 300 ) {
+				open();
+			}
 		}
 	}
 
@@ -116,6 +132,23 @@
 		if( state === STATE_OPENED ) {
 			targetY = window.innerHeight;
 		}
+	}
+
+	function open() {
+		dragging = false;
+		state = STATE_OPENED;
+		tagElement.innerHTML = openedText;
+	}
+
+	function close() {
+		dragging = false;
+		state = STATE_CLOSED;
+		tagElement.innerHTML = closedText;
+	}
+
+	function detach() {
+		state = STATE_DETACHED;
+		tagElement.innerHTML = detachedText;
 	}
 
 	function animate() {
@@ -135,21 +168,18 @@
 
 			// Detach the tag when we're close enough
 			if( distance < TAG_WIDTH * 1.5 ) {
-				state = STATE_DETACHED;
-				tagElement.innerHTML = activeText;
+				detach();
 			}
 			// Re-attach the tag if the user mouse away
-			else if( dragging && state === STATE_DETACHED && distance > TAG_WIDTH * 2 ) {
-				state = STATE_CLOSED;
-				tagElement.innerHTML = inactiveText;
+			else if( !dragging && state === STATE_DETACHED && distance > TAG_WIDTH * 2 ) {
+				close();
 			}
 
 			if( dragging ) {
 				targetY = Math.max( mouse.y - dragY, 0 );
 
 				if( targetY > window.innerHeight * DRAG_THRESHOLD ) {
-					dragging = false;
-					state = STATE_OPENED;
+					open();
 				}
 			}
 			else {
@@ -164,9 +194,9 @@
 			velocityY *= 0.94;
 			velocityY += gravity;
 
-			var offsetX = ( ( mouse.x - containerOffsetX ) - openedX ) * 0.2;
+			var offsetX = ( ( mouse.x - containerOffsetX ) - closedX ) * 0.2;
 			
-			anchorB.x += ( ( openedX + offsetX ) - anchorB.x ) * 0.1;
+			anchorB.x += ( ( closedX + offsetX ) - anchorB.x ) * 0.1;
 			anchorB.y += velocityY;
 
 			var strain = distanceBetween( anchorA.x, anchorA.y, anchorB.x, anchorB.y );
@@ -178,16 +208,15 @@
 			var dy = Math.max( mouse.y - anchorB.y, 0 ),
 				dx = mouse.x - ( containerOffsetX + anchorB.x );
 
-			var angle = Math.atan2( dy, dx ) * 180 / Math.PI;
-			angle = Math.min( 130, Math.max( 50, angle ) );
+			var angle = Math.min( 130, Math.max( 50, Math.atan2( dy, dx ) * 180 / Math.PI ) );
 
 			rotation += ( angle - rotation ) * 0.1;
 		}
 		else if( state === STATE_OPENED ) {
-			anchorB.x += ( anchorA.x - anchorB.x ) * 0.2;
-			anchorB.y += ( (TAG_HEIGHT*2) - anchorB.y ) * 0.2;
+			anchorB.x += ( openedX - anchorB.x ) * 0.2;
+			anchorB.y += ( openedY - anchorB.y ) * 0.2;
 
-			rotation += ( 90 - rotation ) * 0.2;
+			rotation += ( 0 - rotation ) * 0.15;
 		}
 		else {
 			anchorB.x += ( anchorA.x - anchorB.x ) * 0.2;
@@ -199,8 +228,10 @@
 
 	function render() {
 
-		targetElement.style.top = - 100 + Math.min( ( targetY / window.innerHeight ) * 100, 100 ) + '%';
-		ribbonElement.style[ prefix( 'transform' ) ] = transform( 0, targetY, 0 );
+		currentY += ( targetY - currentY ) * 0.3;
+
+		curtainElement.style.top = - 100 + Math.min( ( currentY / window.innerHeight ) * 100, 100 ) + '%';
+		ribbonElement.style[ prefix( 'transform' ) ] = transform( 0, currentY, 0 );
 		
 		tagElement.style[ prefix( 'transform' ) ] = transform( anchorB.x, anchorB.y, rotation );
 

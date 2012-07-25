@@ -3,8 +3,6 @@
  * http://lab.hakim.se/forkit-js
  * MIT licensed
  *
- * The state of the code is crude at best, will clean it up soon.
- * 
  * Created by Hakim El Hattab, http://hakim.se
  */
 (function(){
@@ -15,6 +13,7 @@
 
 		TAG_HEIGHT = 30,
 		TAG_WIDTH = 200,
+		MAX_STRAIN = 40,
 
 		// Factor of page height that needs to be dragged for the 
 		// curtain to fall
@@ -37,25 +36,26 @@
 		closedText = '',
 		detachedText = '',
 
+		friction = 1.04;
 		gravity = 1.5,
 
+		// Resting position of the ribbon when curtain is closed
 		closedX = TAG_WIDTH * 0.4,
 		closedY = -TAG_HEIGHT * 0.5,
+
+		// Resting position of the ribbon when curtain is opened
 		openedX = TAG_WIDTH * 0.4,
 		openedY = TAG_HEIGHT,
 
-		velocityX = 0,
-		velocityY = 0,
+		velocity = 0,
 		rotation = 45,
 
-		dragX = 0,
-		dragY = 0,
-
-		targetY = 0,
-		currentY = 0,
+		curtainTargetY = 0,
+		curtainCurrentY = 0,
 
 		dragging = false,
 		dragTime = 0,
+		dragY = 0,
 
 		anchorA = new Point( closedX, closedY ),
 		anchorB = new Point( closedX, closedY ),
@@ -76,14 +76,11 @@
 
 			// Construct the sub-elements required to represent the 
 			// tag and string that it hangs from
-			dom.ribbon.innerHTML = '<span class="string"></span>'
-										+ '<span class="tag">' + closedText + '</span>';
-
+			dom.ribbon.innerHTML = '<span class="string"></span><span class="tag">' + closedText + '</span>';
 			dom.ribbonString = dom.ribbon.querySelector( '.string' );
 			dom.ribbonTag = dom.ribbon.querySelector( '.tag' );
 
-			animate();
-
+			// Bind events
 			dom.ribbon.addEventListener( 'click', onRibbonClick, false );
 			document.addEventListener( 'mousemove', onMouseMove, false );
 			document.addEventListener( 'mousedown', onMouseDown, false );
@@ -94,6 +91,9 @@
 				dom.closeButton.addEventListener( 'click', onCloseClick, false );
 			}
 
+			// Start the animation loop
+			animate();
+
 		}
 
 	}
@@ -102,11 +102,10 @@
 		if( dom.curtain && state === STATE_DETACHED ) {
 			event.preventDefault();
 
+			dragY = event.clientY;
 			dragTime = Date.now();
 			dragging = true;
 
-			dragX = event.clientX;
-			dragY = event.clientY;
 		}
 	}
 
@@ -142,7 +141,8 @@
 
 	function layout() {
 		if( state === STATE_OPENED ) {
-			targetY = window.innerHeight;
+			curtainTargetY = window.innerHeight;
+			curtainCurrentY = curtainTargetY;
 		}
 	}
 
@@ -170,65 +170,79 @@
 	}
 
 	function update() {
+		// Distance between mouse and top right corner
 		var distance = distanceBetween( mouse.x, mouse.y, window.innerWidth, 0 );
 
+		// If we're OPENED the curtainTargetY should ease towards page bottom
 		if( state === STATE_OPENED ) {
-			targetY = Math.min( targetY + ( window.innerHeight - targetY ) * 0.2, window.innerHeight );
+			curtainTargetY = Math.min( curtainTargetY + ( window.innerHeight - curtainTargetY ) * 0.2, window.innerHeight );
 		}
 		else {
 
-			// Detach the tag when we're close enough
+			// Detach the tag when hovering close enough
 			if( distance < TAG_WIDTH * 1.5 ) {
 				detach();
 			}
-			// Re-attach the tag if the user mouse away
+			// Re-attach the tag if the user moved away
 			else if( !dragging && state === STATE_DETACHED && distance > TAG_WIDTH * 2 ) {
 				close();
 			}
 
 			if( dragging ) {
-				targetY = Math.max( mouse.y - dragY, 0 );
+				// Updat the curtain position while dragging
+				curtainTargetY = Math.max( mouse.y - dragY, 0 );
 
-				if( targetY > window.innerHeight * DRAG_THRESHOLD ) {
+				// If the threshold is crossed, open the curtain
+				if( curtainTargetY > window.innerHeight * DRAG_THRESHOLD ) {
 					open();
 				}
 			}
 			else {
-				targetY *= 0.8;
+				curtainTargetY *= 0.8;
 			}
 
 		}
 
-		if( dragging || state === STATE_DETACHED ) {
-			var containerOffsetX = dom.ribbon.offsetLeft;
+		// Ease towards the target position of the curtain
+		curtainCurrentY += ( curtainTargetY - curtainCurrentY ) * 0.3;
 
-			velocityY *= 0.96;
-			velocityY += gravity;
+		// If we're dragging or detached we need to simulate 
+		// the physical behavior of the ribbon
+		if( dragging || state === STATE_DETACHED ) {
+
+			// Apply forces
+			velocity /= friction;
+			velocity += gravity;
+
+			var containerOffsetX = dom.ribbon.offsetLeft;
 
 			var offsetX = ( ( mouse.x - containerOffsetX ) - closedX ) * 0.2;
 			
 			anchorB.x += ( ( closedX + offsetX ) - anchorB.x ) * 0.1;
-			anchorB.y += velocityY;
+			anchorB.y += velocity;
 
 			var strain = distanceBetween( anchorA.x, anchorA.y, anchorB.x, anchorB.y );
 
-			if( strain > 40 ) {
-				velocityY -= Math.abs( strain ) / 50;
+			if( strain > MAX_STRAIN ) {
+				velocity -= Math.abs( strain ) / ( MAX_STRAIN * 1.25 );
 			}
 
 			var dy = Math.max( mouse.y - anchorB.y, 0 ),
 				dx = mouse.x - ( containerOffsetX + anchorB.x );
 
+			// Angle the ribbon towards the mouse but limit it avoid extremes
 			var angle = Math.min( 130, Math.max( 50, Math.atan2( dy, dx ) * 180 / Math.PI ) );
 
 			rotation += ( angle - rotation ) * 0.1;
 		}
+		// Ease ribbon towards the OPENED state
 		else if( state === STATE_OPENED ) {
 			anchorB.x += ( openedX - anchorB.x ) * 0.2;
 			anchorB.y += ( openedY - anchorB.y ) * 0.2;
 
 			rotation += ( 90 - rotation ) * 0.02;
 		}
+		// Ease ribbon towards the CLOSED state
 		else {
 			anchorB.x += ( anchorA.x - anchorB.x ) * 0.2;
 			anchorB.y += ( anchorA.y - anchorB.y ) * 0.2;
@@ -239,11 +253,8 @@
 
 	function render() {
 
-		currentY += ( targetY - currentY ) * 0.3;
-
-		dom.curtain.style.top = - 100 + Math.min( ( currentY / window.innerHeight ) * 100, 100 ) + '%';
-		dom.ribbon.style[ prefix( 'transform' ) ] = transform( 0, currentY, 0 );
-		
+		dom.curtain.style.top = - 100 + Math.min( ( curtainCurrentY / window.innerHeight ) * 100, 100 ) + '%';
+		dom.ribbon.style[ prefix( 'transform' ) ] = transform( 0, curtainCurrentY, 0 );
 		dom.ribbonTag.style[ prefix( 'transform' ) ] = transform( anchorB.x, anchorB.y, rotation );
 
 		var dy = anchorB.y - anchorA.y,

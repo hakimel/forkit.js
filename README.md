@@ -1,6 +1,6 @@
 # forkit.js
 
-Concept for a more playful and animated GitHub ribbon. 
+An experimental animated ribbon which reveals a curtain of additional content.
 
 Curious about how this looks in action? [Check out the demo page](http://lab.hakim.se/forkit-js/).
 

@@ -72,7 +72,7 @@
 
 			// Fetch label texts from DOM
 			closedText = dom.ribbon.getAttribute( 'data-text' ) || '';
-			detachedText = dom.ribbon.getAttribute( 'data-text-active' ) || 'Drag down >';
+			detachedText = dom.ribbon.getAttribute( 'data-text-detached' ) || closedText;
 
 			// Construct the sub-elements required to represent the 
 			// tag and string that it hangs from
@@ -216,7 +216,7 @@
 
 			var containerOffsetX = dom.ribbon.offsetLeft;
 
-			var offsetX = ( ( mouse.x - containerOffsetX ) - closedX ) * 0.2;
+			var offsetX = Math.max( ( ( mouse.x - containerOffsetX ) - closedX ) * 0.2, -MAX_STRAIN );
 			
 			anchorB.x += ( ( closedX + offsetX ) - anchorB.x ) * 0.1;
 			anchorB.y += velocity;
@@ -253,7 +253,10 @@
 
 	function render() {
 
-		dom.curtain.style.top = - 100 + Math.min( ( curtainCurrentY / window.innerHeight ) * 100, 100 ) + '%';
+		if( dom.curtain ) {
+			dom.curtain.style.top = - 100 + Math.min( ( curtainCurrentY / window.innerHeight ) * 100, 100 ) + '%';
+		}
+
 		dom.ribbon.style[ prefix( 'transform' ) ] = transform( 0, curtainCurrentY, 0 );
 		dom.ribbonTag.style[ prefix( 'transform' ) ] = transform( anchorB.x, anchorB.y, rotation );
 

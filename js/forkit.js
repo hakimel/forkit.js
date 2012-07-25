@@ -22,10 +22,13 @@
 
 		VENDORS = [ 'Webkit', 'Moz', 'O', 'ms' ];
 
-	var ribbonElement,
-		stringElement,
-		tagElement,
-		curtainElement,
+	var dom = {
+			ribbon: null,
+			ribbonString: null,
+			ribbonTag: null,
+			curtain: null,
+			closeButton: null
+		},
 
 		state = STATE_CLOSED,
 
@@ -38,8 +41,8 @@
 
 		closedX = TAG_WIDTH * 0.4,
 		closedY = -TAG_HEIGHT * 0.5,
-		openedX = 0,
-		openedY = -TAG_HEIGHT,
+		openedX = TAG_WIDTH * 0.4,
+		openedY = TAG_HEIGHT,
 
 		velocityX = 0,
 		velocityY = 0,
@@ -61,38 +64,43 @@
 
 	function initialize() {
 
-		ribbonElement = document.querySelector( '.forkit' );
-		curtainElement = document.querySelector( '.forkit-curtain' );
+		dom.ribbon = document.querySelector( '.forkit' );
+		dom.curtain = document.querySelector( '.forkit-curtain' );
+		dom.closeButton = document.querySelector( '.forkit-curtain .close-button' );
 
-		if( ribbonElement ) {
+		if( dom.ribbon ) {
 
 			// Fetch label texts from DOM
-			closedText = ribbonElement.getAttribute( 'data-text' ) || '';
-			detachedText = ribbonElement.getAttribute( 'data-text-active' ) || 'Drag down >';
-			openedText = ribbonElement.getAttribute( 'data-text-opened' ) || 'Close';
+			closedText = dom.ribbon.getAttribute( 'data-text' ) || '';
+			detachedText = dom.ribbon.getAttribute( 'data-text-active' ) || 'Drag down >';
+			openedText = dom.ribbon.getAttribute( 'data-text-opened' ) || 'Close';
 
 			// Construct the sub-elements required to represent the 
 			// tag and string that it hangs from
-			ribbonElement.innerHTML = '<span class="string"></span>'
+			dom.ribbon.innerHTML = '<span class="string"></span>'
 										+ '<span class="tag">' + closedText + '</span>';
 
-			stringElement = ribbonElement.querySelector( '.string' );
-			tagElement = ribbonElement.querySelector( '.tag' );
+			dom.ribbonString = dom.ribbon.querySelector( '.string' );
+			dom.ribbonTag = dom.ribbon.querySelector( '.tag' );
 
 			animate();
 
-			ribbonElement.addEventListener( 'click', onRibbonClick, false );
+			dom.ribbon.addEventListener( 'click', onRibbonClick, false );
 			document.addEventListener( 'mousemove', onMouseMove, false );
 			document.addEventListener( 'mousedown', onMouseDown, false );
 			document.addEventListener( 'mouseup', onMouseUp, false );
 			window.addEventListener( 'resize', layout, false );
+
+			if( dom.closeButton ) {
+				dom.closeButton.addEventListener( 'click', onCloseClick, false );
+			}
 
 		}
 
 	}
 
 	function onMouseDown( event ) {
-		if( curtainElement && state === STATE_DETACHED ) {
+		if( dom.curtain && state === STATE_DETACHED ) {
 			event.preventDefault();
 
 			dragTime = Date.now();
@@ -116,7 +124,7 @@
 	}
 
 	function onRibbonClick( event ) {
-		if( curtainElement ) {
+		if( dom.curtain ) {
 			event.preventDefault();
 
 			if( state === STATE_OPENED ) {
@@ -128,6 +136,11 @@
 		}
 	}
 
+	function onCloseClick( event ) {
+		event.preventDefault();
+		close();
+	}
+
 	function layout() {
 		if( state === STATE_OPENED ) {
 			targetY = window.innerHeight;
@@ -137,18 +150,18 @@
 	function open() {
 		dragging = false;
 		state = STATE_OPENED;
-		tagElement.innerHTML = openedText;
+		dom.ribbonTag.innerHTML = openedText;
 	}
 
 	function close() {
 		dragging = false;
 		state = STATE_CLOSED;
-		tagElement.innerHTML = closedText;
+		dom.ribbonTag.innerHTML = closedText;
 	}
 
 	function detach() {
 		state = STATE_DETACHED;
-		tagElement.innerHTML = detachedText;
+		dom.ribbonTag.innerHTML = detachedText;
 	}
 
 	function animate() {
@@ -189,7 +202,7 @@
 		}
 
 		if( dragging || state === STATE_DETACHED ) {
-			var containerOffsetX = ribbonElement.offsetLeft;
+			var containerOffsetX = dom.ribbon.offsetLeft;
 
 			velocityY *= 0.94;
 			velocityY += gravity;
@@ -216,7 +229,7 @@
 			anchorB.x += ( openedX - anchorB.x ) * 0.2;
 			anchorB.y += ( openedY - anchorB.y ) * 0.2;
 
-			rotation += ( 0 - rotation ) * 0.15;
+			rotation += ( 90 - rotation ) * 0.02;
 		}
 		else {
 			anchorB.x += ( anchorA.x - anchorB.x ) * 0.2;
@@ -230,18 +243,18 @@
 
 		currentY += ( targetY - currentY ) * 0.3;
 
-		curtainElement.style.top = - 100 + Math.min( ( currentY / window.innerHeight ) * 100, 100 ) + '%';
-		ribbonElement.style[ prefix( 'transform' ) ] = transform( 0, currentY, 0 );
+		dom.curtain.style.top = - 100 + Math.min( ( currentY / window.innerHeight ) * 100, 100 ) + '%';
+		dom.ribbon.style[ prefix( 'transform' ) ] = transform( 0, currentY, 0 );
 		
-		tagElement.style[ prefix( 'transform' ) ] = transform( anchorB.x, anchorB.y, rotation );
+		dom.ribbonTag.style[ prefix( 'transform' ) ] = transform( anchorB.x, anchorB.y, rotation );
 
 		var dy = anchorB.y - anchorA.y,
 			dx = anchorB.x - anchorA.x;
 
 		var angle = Math.atan2( dy, dx ) * 180 / Math.PI;
 
-		stringElement.style.width = anchorB.y + 'px';
-		stringElement.style[ prefix( 'transform' ) ] = transform( anchorA.x, 0, angle );
+		dom.ribbonString.style.width = anchorB.y + 'px';
+		dom.ribbonString.style[ prefix( 'transform' ) ] = transform( anchorA.x, 0, angle );
 
 	}
 

@@ -15,7 +15,7 @@
 		TAG_WIDTH = 200,
 		MAX_STRAIN = 40,
 
-		// Factor of page height that needs to be dragged for the 
+		// Factor of page height that needs to be dragged for the
 		// curtain to fall
 		DRAG_THRESHOLD = 0.36;
 
@@ -74,7 +74,7 @@
 			closedText = dom.ribbon.getAttribute( 'data-text' ) || '';
 			detachedText = dom.ribbon.getAttribute( 'data-text-detached' ) || closedText;
 
-			// Construct the sub-elements required to represent the 
+			// Construct the sub-elements required to represent the
 			// tag and string that it hangs from
 			dom.ribbon.innerHTML = '<span class="string"></span><span class="tag">' + closedText + '</span>';
 			dom.ribbonString = dom.ribbon.querySelector( '.string' );
@@ -85,6 +85,9 @@
 			document.addEventListener( 'mousemove', onMouseMove, false );
 			document.addEventListener( 'mousedown', onMouseDown, false );
 			document.addEventListener( 'mouseup', onMouseUp, false );
+			document.addEventListener( 'touchstart', onTouchStart, false);
+			document.addEventListener( 'touchmove', onTouchMove, false);
+			document.addEventListener( 'touchend', onTouchEnd, false);
 			window.addEventListener( 'resize', layout, false );
 
 			if( dom.closeButton ) {
@@ -101,7 +104,6 @@
 	function onMouseDown( event ) {
 		if( dom.curtain && state === STATE_DETACHED ) {
 			event.preventDefault();
-
 			dragY = event.clientY;
 			dragTime = Date.now();
 			dragging = true;
@@ -115,6 +117,29 @@
 	}
 
 	function onMouseUp( event ) {
+		if( state !== STATE_OPENED ) {
+			state = STATE_CLOSED;
+			dragging = false;
+		}
+	}
+
+	function onTouchStart( event ) {
+		if( dom.curtain && state === STATE_DETACHED ) {
+			event.preventDefault();
+			var touch = event.touches[0];
+			dragY = touch.clientY;
+			dragTime = Date.now();
+			dragging = true;
+		}
+	}
+
+	function onTouchMove( event ) {
+		var touch = event.touches[0];
+		mouse.x = touch.pageX;
+		mouse.y = touch.pageY;
+	}
+
+	function onTouchEnd( event ) {
 		if( state !== STATE_OPENED ) {
 			state = STATE_CLOSED;
 			dragging = false;
@@ -206,7 +231,7 @@
 		// Ease towards the target position of the curtain
 		curtainCurrentY += ( curtainTargetY - curtainCurrentY ) * 0.3;
 
-		// If we're dragging or detached we need to simulate 
+		// If we're dragging or detached we need to simulate
 		// the physical behavior of the ribbon
 		if( dragging || state === STATE_DETACHED ) {
 
@@ -217,7 +242,7 @@
 			var containerOffsetX = dom.ribbon.offsetLeft;
 
 			var offsetX = Math.max( ( ( mouse.x - containerOffsetX ) - closedX ) * 0.2, -MAX_STRAIN );
-			
+
 			anchorB.x += ( ( closedX + offsetX ) - anchorB.x ) * 0.1;
 			anchorB.y += velocity;
 
@@ -298,7 +323,7 @@
 	 * Defines a 2D position.
 	 */
 	function Point( x, y ) {
-		this.x = x || 0; 
+		this.x = x || 0;
 		this.y = y || 0;
 	}
 

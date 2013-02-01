@@ -18,7 +18,13 @@
 
 	font-family: 'Lato', sans-serif;
 	text-decoration: none;
+	overflow: hidden;
 }
+
+.forkit.detach {
+	overflow: visible;
+}
+
 	.forkit .tag {
 		display: block;
 		height: 30px;

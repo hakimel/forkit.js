@@ -180,11 +180,13 @@
 		dragging = false;
 		state = STATE_CLOSED;
 		dom.ribbonTag.innerHTML = closedText;
+		dom.ribbon.classList.remove("detach");
 	}
 
 	function detach() {
 		state = STATE_DETACHED;
 		dom.ribbonTag.innerHTML = detachedText;
+		dom.ribbon.classList.add("detach");
 	}
 
 	function animate() {

@@ -180,14 +180,31 @@
 		dragging = false;
 		state = STATE_CLOSED;
 		dom.ribbonTag.innerHTML = closedText;
-		dom.ribbon.classList.remove("detach");
+		removeClassName(dom.ribbon, "detach");
 	}
 
 	function detach() {
 		state = STATE_DETACHED;
 		dom.ribbonTag.innerHTML = detachedText;
-		dom.ribbon.classList.add("detach");
+		addClassName(dom.ribbon, "detach");
 	}
+
+	function hasClassName(el, name) {
+		return new RegExp("(?:^|\\s+)" + name + "(?:\\s+|$)").test(el.className);
+	}
+
+	function addClassName(el, name) {
+		if (!hasClassName(el, name)) {
+			el.className = el.className ? [el.className, name].join(' ') : name;
+		}
+	};
+
+	function removeClassName(el, name) {
+		if (hasClassName(el, name)) {
+			var c = el.className;
+			el.className = c.replace(new RegExp("(?:^|\\s+)" + name + "(?:\\s+|$)", "g"), "");
+		}
+	};
 
 	function animate() {
 		update();

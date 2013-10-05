@@ -171,22 +171,22 @@
 		}
 	}
 
-    function runCallback(name, arguments) {
-        var fn = window[name];
-        if(typeof fn !== 'function')
-            return;
+	function runCallback(name, arguments) {
+		var fn = window[name];
+		if(typeof fn !== 'function')
+			return;
 
-        fn.apply(window, arguments);
-    }
+		fn.apply(window, arguments);
+	}
 
 	function open() {
 		dragging = false;
 		state = STATE_OPENED;
 
-        var callback = dom.ribbon.getAttribute( 'data-on-open' ) || '';
-        if (callback != '') {
-            runCallback(callback);
-        }
+		var callback = dom.ribbon.getAttribute( 'data-on-open' ) || '';
+		if (callback != '') {
+			runCallback(callback);
+		}
 	}
 
 	function close() {
@@ -194,10 +194,10 @@
 		state = STATE_CLOSED;
 		dom.ribbonTag.innerHTML = closedText;
 
-        var callback = dom.ribbon.getAttribute( 'data-on-close' ) || '';
-        if (callback != '') {
-            runCallback(callback);
-        }
+		var callback = dom.ribbon.getAttribute( 'data-on-close' ) || '';
+		if (callback != '') {
+			runCallback(callback);
+		}
 	}
 
 	function detach() {

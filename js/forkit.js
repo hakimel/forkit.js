@@ -174,12 +174,14 @@
 	function open() {
 		dragging = false;
 		state = STATE_OPENED;
+		dispatchEvent( 'forkit-open' );
 	}
 
 	function close() {
 		dragging = false;
 		state = STATE_CLOSED;
 		dom.ribbonTag.innerHTML = closedText;
+		dispatchEvent( 'forkit-close' );
 	}
 
 	function detach() {
@@ -317,6 +319,12 @@
 		var dx = x1-x2;
 		var dy = y1-y2;
 		return Math.sqrt(dx*dx + dy*dy);
+	}
+
+	function dispatchEvent( type ) {
+		var event = document.createEvent( 'HTMLEvents', 1, 2 );
+		event.initEvent( type, true, true );
+		dom.ribbon.dispatchEvent( event );
 	}
 
 	/**

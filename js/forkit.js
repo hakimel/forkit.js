@@ -120,6 +120,7 @@
 		if( state !== STATE_OPENED ) {
 			state = STATE_CLOSED;
 			dragging = false;
+			dispatchEvent( 'forkit-out' );
 		}
 	}
 
@@ -143,6 +144,7 @@
 		if( state !== STATE_OPENED ) {
 			state = STATE_CLOSED;
 			dragging = false;
+			dispatchEvent( 'forkit-out' );
 		}
 	}
 
@@ -187,6 +189,7 @@
 	function detach() {
 		state = STATE_DETACHED;
 		dom.ribbonTag.innerHTML = detachedText;
+		dispatchEvent( 'forkit-hover' );
 	}
 
 	function animate() {

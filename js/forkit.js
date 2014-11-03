@@ -32,6 +32,9 @@
 		// The current state of the ribbon
 		state = STATE_CLOSED,
 
+		// The last event sent so we don't dispatch multiple times
+		last_event = '',
+
 		// Ribbon text, correlates to states
 		closedText = '',
 		detachedText = '',
@@ -187,6 +190,7 @@
 	function detach() {
 		state = STATE_DETACHED;
 		dom.ribbonTag.innerHTML = detachedText;
+		dispatchEvent( 'forkit-hover' );
 	}
 
 	function animate() {
@@ -275,6 +279,7 @@
 			anchorB.y += ( anchorA.y - anchorB.y ) * 0.2;
 
 			rotation += ( 45 - rotation ) * 0.2;
+			dispatchEvent( 'forkit-out' );
 		}
 	}
 
@@ -322,9 +327,12 @@
 	}
 
 	function dispatchEvent( type ) {
-		var event = document.createEvent( 'HTMLEvents', 1, 2 );
-		event.initEvent( type, true, true );
-		dom.ribbon.dispatchEvent( event );
+		if ( last_event != type ) {
+			var event = document.createEvent( 'HTMLEvents', 1, 2 );
+			event.initEvent( type, true, true );
+			last_event = type;
+			dom.ribbon.dispatchEvent( event );
+		}
 	}
 
 	/**
